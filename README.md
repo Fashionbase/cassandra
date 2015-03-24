@@ -5,7 +5,7 @@ Cassandra 2.1.3
 
 Usage
 -----
-In the simplest case, you can start a single node with `docker run jeremyot/cassandra`. The new node
+In the simplest case, you can start a single node with `docker run fashionbase/cassandra`. The new node
 will be configured to listen on the address asigned to the eth0 interface and will accept RPC connectons
 on all interfaces.
 
@@ -15,16 +15,16 @@ using etcd. For example:
 ```bash
 ETCD=`docker run -d jeremyot/etcd`
 ETCD_ADDR=`docker inspect --format '{{ .NetworkSettings.IPAddress }}' ${ETCD}`
-docker run -d jeremyot/cassandra autoscale "${ETCD_ADDR}:4001" service/cassandra
-docker run -d jeremyot/cassandra autoscale "${ETCD_ADDR}:4001" service/cassandra --join
-docker run -d jeremyot/cassandra autoscale "${ETCD_ADDR}:4001" service/cassandra --join
+docker run -d fashionbase/cassandra autoscale "${ETCD_ADDR}:4001" services/cassandra
+docker run -d fashionbase/cassandra autoscale "${ETCD_ADDR}:4001" services/cassandra --join
+docker run -d fashionbase/cassandra autoscale "${ETCD_ADDR}:4001" services/cassandra --join
 ```
 
 will start a three node cassandra cluster. You can verify with
 
 ```bash
 CASSANDRA_ADDR=`docker inspect --format "{{ .NetworkSettings.IPAddress }}" \`docker ps -lq\``
-docker run -it --rm jeremyot/cassandra nodetool -h $CASSANDRA_ADDR status
+docker run -it --rm fashionbase/cassandra nodetool -h $CASSANDRA_ADDR status
 ```
 
 You should see a normal `nodetool status` printout displaying information on all three nodes.
@@ -53,7 +53,7 @@ For convenience, a few special arguments are supported:
 
 - `--listen_interface="etho"`: configures cassandra to bind to the specified interface.
 - `--seeds="10.0.0.2, 10.0.0.3"`: a shortcut for using SimpleSeedProvider with the specified seeds.
-- `--etc_seeds="127.0.0.1:4001/v2/keys/service/key"`: queries etcd for the initial list of keys, registered at the specified path.
+- `--etc_seeds="127.0.0.1:4001/v2/keys/services/key"`: queries etcd for the initial list of keys, registered at the specified path.
   (used by autoscale). Will start as a standalone node if no results are found.
 - `--logger=INFO,stdout,R`: sets the logger in `log4j-server.properties`.
 - `--infer_address=google.com`: uses a connection to the specified address to infer which address Cassandra should bind to. useful
@@ -74,12 +74,12 @@ Along with Cassandra, there are a few tools included with this container. They a
 
 #### `autoscale`
 
-Autoscaling may be used in a few different ways. Called with `autoscale 10.0.0.8:4001 service/cassandra`, Cassandra will infer its
+Autoscaling may be used in a few different ways. Called with `autoscale 10.0.0.8:4001 services/cassandra`, Cassandra will infer its
 `listen_address` by making a connection to `10.0.0.8`. It will then attempt to retrieve a list of seeds by querying
-`http://10.0.0.8:4001/v2/keys/service/cassandra`, using its own address as the only seed if none are found. Finally, etcdmon will
-update `http://10.0.0.8:4001/v2/keys/service/cassandra/<node_address>` with `value={"host": <node_address>}&ttl=30`, pinging etcd every 10
-seconds. Alternatively `autoscale 10.0.0.8:4001 service/cassandra <interface_name>` may be used to bind to the specified interface,
-and `autoscale 10.0.0.8:4001 service/cassandra <remote_address>` will infer the address by making a connection to the specified
+`http://10.0.0.8:4001/v2/keys/services/cassandra`, using its own address as the only seed if none are found. Finally, etcdmon will
+update `http://10.0.0.8:4001/v2/keys/services/cassandra/<node_address>` with `value={"host": <node_address>}&ttl=30`, pinging etcd every 10
+seconds. Alternatively `autoscale 10.0.0.8:4001 services/cassandra <interface_name>` may be used to bind to the specified interface,
+and `autoscale 10.0.0.8:4001 services/cassandra <remote_address>` will infer the address by making a connection to the specified
 remote address. If the third argument does not begin with `--`, it will first be treated as an interface, then used to infer
 the address if no matching interface is found. In all three cases, standard configuration options may be appended.
 
